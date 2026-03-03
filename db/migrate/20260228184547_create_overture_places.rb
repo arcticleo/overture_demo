@@ -1,0 +1,24 @@
+# frozen_string_literal: true
+
+class CreateOverturePlaces < ActiveRecord::Migration[8.0]
+  def change
+    create_table :overture_places, id: :string, primary_key: :id do |t|
+      t.string :names, array: true, default: []
+      t.jsonb :categories, default: {}
+      t.jsonb :brands, default: {}
+      t.jsonb :addresses, default: []
+      t.string :confidence
+      t.float :elevation
+      t.string :country
+      t.timestamps
+    end
+
+    add_index :overture_places, :country
+    add_index :overture_places, :categories, using: :gin
+    add_index :overture_places, :brands, using: :gin
+
+    # Add geometry column using PostGIS adapter
+    add_column :overture_places, :geometry, :st_point, geographic: true, srid: 4326
+    add_index :overture_places, :geometry, using: :gist
+  end
+end

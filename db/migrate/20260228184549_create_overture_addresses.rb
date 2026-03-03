@@ -1,0 +1,22 @@
+# frozen_string_literal: true
+
+class CreateOvertureAddresses < ActiveRecord::Migration[8.0]
+  def change
+    create_table :overture_addresses, id: :string, primary_key: :id do |t|
+      t.string :street
+      t.string :locality
+      t.string :region
+      t.string :country
+      t.string :postcode
+      t.timestamps
+    end
+
+    # Add geometry column using PostGIS adapter
+    add_column :overture_addresses, :geometry, :st_point, geographic: true, srid: 4326
+    add_index :overture_addresses, :geometry, using: :gist
+
+    add_index :overture_addresses, :country
+    add_index :overture_addresses, :locality
+    add_index :overture_addresses, :postcode
+  end
+end
