@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_12_080003) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_12_090001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "postgis"
@@ -121,6 +121,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_12_080003) do
     t.index ["geometry"], name: "index_overture_divisions_on_geometry", using: :gist
     t.index ["name"], name: "index_overture_divisions_on_name"
     t.index ["subtype"], name: "index_overture_divisions_on_subtype"
+  end
+
+  create_table "overture_imported_areas", force: :cascade do |t|
+    t.float "bbox_xmax"
+    t.float "bbox_xmin"
+    t.float "bbox_ymax"
+    t.float "bbox_ymin"
+    t.datetime "created_at", null: false
+    t.string "feature_type", null: false
+    t.string "model_class_name", null: false
+    t.integer "records_count", default: 0
+    t.string "release", null: false
+    t.string "slug", null: false
+    t.string "theme", null: false
+    t.datetime "updated_at", null: false
+    t.index ["release"], name: "index_overture_imported_areas_on_release"
+    t.index ["theme", "feature_type", "slug"], name: "idx_on_theme_feature_type_slug_95b926eacb", unique: true
   end
 
   create_table "overture_places", id: :string, force: :cascade do |t|
