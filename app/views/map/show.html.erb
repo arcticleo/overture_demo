@@ -1,0 +1,97 @@
+<%# Imported Overture data rendered straight from the gem's MVT endpoint. %>
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; }
+  #map { position: absolute; inset: 0; }
+  .map-legend {
+    position: absolute; top: 10px; left: 10px; z-index: 1;
+    background: rgba(255, 255, 255, 0.92); border-radius: 6px;
+    padding: 10px 14px; font: 13px/1.5 system-ui, sans-serif;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  }
+  .map-legend h1 { font-size: 14px; margin: 0 0 4px; }
+  .map-legend .swatch {
+    display: inline-block; width: 10px; height: 10px;
+    border-radius: 50%; margin-right: 6px;
+  }
+</style>
+
+<div id="map"></div>
+<div class="map-legend">
+  <h1>Overture Demo — Pike Place, Seattle</h1>
+  <div><span class="swatch" style="background:#e25c4a"></span>Places (click for details)</div>
+  <div><span class="swatch" style="background:#8d99ae; border-radius:0"></span>Buildings</div>
+  <div><span class="swatch" style="background:#457b9d; border-radius:0; height:3px"></span>Road segments</div>
+</div>
+
+<script>
+  const tiles = (layer) => [`${location.origin}/overture/tiles/${layer}/{z}/{x}/{y}.mvt`];
+
+  const map = new maplibregl.Map({
+    container: "map",
+    center: [-122.3405, 47.609],
+    zoom: 15.5,
+    attributionControl: false,
+    style: {
+      version: 8,
+      sources: {
+        osm: {
+          type: "raster",
+          tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+          tileSize: 256,
+          attribution: "© OpenStreetMap contributors"
+        },
+        buildings: { type: "vector", tiles: tiles("buildings"), minzoom: 12 },
+        segments: { type: "vector", tiles: tiles("segments"), minzoom: 12 },
+        places: { type: "vector", tiles: tiles("places"), minzoom: 12 }
+      },
+      layers: [
+        { id: "osm", type: "raster", source: "osm", paint: { "raster-saturation": -0.8, "raster-opacity": 0.6 } },
+        {
+          id: "buildings", type: "fill", source: "buildings", "source-layer": "buildings",
+          paint: { "fill-color": "#8d99ae", "fill-opacity": 0.35, "fill-outline-color": "#5d6b85" }
+        },
+        {
+          id: "segments", type: "line", source: "segments", "source-layer": "segments",
+          paint: { "line-color": "#457b9d", "line-width": 1.5, "line-opacity": 0.7 }
+        },
+        {
+          id: "places", type: "circle", source: "places", "source-layer": "places",
+          paint: {
+            "circle-radius": 4.5,
+            "circle-color": "#e25c4a",
+            "circle-stroke-width": 1,
+            "circle-stroke-color": "#ffffff"
+          }
+        }
+      ]
+    }
+  });
+
+  map.addControl(new maplibregl.NavigationControl());
+
+  // Attribution generated from the imported data's sources column.
+  fetch("/overture/attribution")
+    .then((response) => response.json())
+    .then(({ text }) => {
+      map.addControl(new maplibregl.AttributionControl({
+        compact: false,
+        customAttribution: text
+      }));
+    });
+
+  map.on("click", "places", (event) => {
+    const props = event.features[0].properties;
+    new maplibregl.Popup()
+      .setLngLat(event.lngLat)
+      .setHTML(
+        `<strong>${props.name ?? "(unnamed)"}</strong><br>` +
+        `${props.primary_category ?? ""} · confidence ${props.confidence ?? "?"}`
+      )
+      .addTo(map);
+  });
+  map.on("mouseenter", "places", () => { map.getCanvas().style.cursor = "pointer"; });
+  map.on("mouseleave", "places", () => { map.getCanvas().style.cursor = ""; });
+</script>
