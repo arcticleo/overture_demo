@@ -1,0 +1,29 @@
+# Local development database: PostgreSQL + PostGIS.
+# Runs on port 5433 to avoid clashing with any host PostgreSQL on 5432.
+#
+#   docker compose up -d
+#   bin/rails db:prepare
+name: overture_demo
+
+services:
+  db:
+    # postgis/postgis publishes no arm64 build; imresamu/postgis is the
+    # multi-arch equivalent (works on Apple Silicon and amd64 alike).
+    image: imresamu/postgis:17-3.5
+    container_name: overture_demo_db
+    environment:
+      POSTGRES_USER: overture_demo
+      POSTGRES_PASSWORD: overture_demo
+      POSTGRES_DB: overture_demo_development
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U overture_demo"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  db_data:

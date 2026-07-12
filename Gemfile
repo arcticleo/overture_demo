@@ -20,6 +20,9 @@ gem "jbuilder"
 # Overture Maps
 gem "overture_maps", path: "../overture_maps"
 
+# Native DuckDB bindings for fast Overture remote queries (CLI fallback otherwise)
+gem "duckdb"
+
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"
 

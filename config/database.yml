@@ -1,10 +1,14 @@
-# PostgreSQL. Versions 9.3 and up are supported.
-
+# PostgreSQL + PostGIS.
+#
+# Development and test default to the docker-compose PostGIS accessory
+# (docker compose up -d), which listens on localhost:5433.
 default: &default
   adapter: postgis
   encoding: unicode
-  username: eme
-  host: localhost
+  host: <%= ENV.fetch("DB_HOST", "localhost") %>
+  port: <%= ENV.fetch("DB_PORT", 5433) %>
+  username: <%= ENV.fetch("DB_USERNAME", "overture_demo") %>
+  password: <%= ENV.fetch("DB_PASSWORD", "overture_demo") %>
   max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
 
 development:
@@ -15,7 +19,10 @@ test:
   <<: *default
   database: overture_demo_test
 
+# In production the Kamal accessory (config/deploy.yml) provides the
+# database; DB_HOST is set to the accessory host on the kamal network.
 production:
   <<: *default
+  port: <%= ENV.fetch("DB_PORT", 5432) %>
   database: overture_demo_production
   password: <%= ENV["OVERTURE_DEMO_DATABASE_PASSWORD"] %>
